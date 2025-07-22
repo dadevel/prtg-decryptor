@@ -1,0 +1,16 @@
+[project]
+name = "prtg-decryptor"
+version = "0.0.1"
+description = ""
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pycryptodome>=3.23.0",
+]
+
+[project.scripts]
+prtg-decryptor = "prtgdecryptor.main:main"
+
+[tool.uv]
+package = true
