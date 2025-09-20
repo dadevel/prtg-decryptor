@@ -6,7 +6,6 @@ import argparse
 import os
 from html import escape
 
-
 def generate_html(results, output_file):
     # group by columns
     groups = defaultdict(list)
@@ -66,9 +65,33 @@ def generate_html(results, output_file):
 
     print(f"[+] HTML report written to {os.path.abspath(output_file)}")
 
-def parse_xml(xml_file):
-    tree = etree.parse(xml_file)
+def decrypt_xml_node(node, cipher):
+    """
+    Recursively decrypt XML node text if a 'crypt' attribute is present.
+    Handles <cell crypt="..."> and <item crypt="..."> structures.
+    """
+    # If this node itself has 'crypt', decrypt its text if it exists
+    if node.get("crypt") and node.text and cipher:
+        try:
+            node.text = cipher.decrypt(node.text.strip(), decode=True)
+        except Exception as e:
+            pass
 
+    # If <item crypt="...">, you might want to decrypt specific child nodes, e.g., <text>
+    if node.tag.lower() == "item" and node.get("crypt") and cipher:
+        text_child = node.find("text")
+        if text_child is not None and text_child.text:
+            try:
+                text_child.text = cipher.decrypt(text_child.text.strip(), decode=True)
+            except Exception as e:
+                pass
+
+    # Recurse for children
+    for child in node:
+        decrypt_xml_node(child, cipher)
+
+def extract_valuables(xml_file):
+    tree = etree.parse(xml_file)
     root = tree.getroot()
     guid = root.get('guid')
     cipher = PaeCipherAES256(guid=guid)
@@ -173,38 +196,38 @@ def parse_xml(xml_file):
         for child in node:
             recurse(child, path)
 
-    
     recurse(root)
     return results
-
-
 
 def main() -> None:
     entrypoint = ArgumentParser()
     parsers = entrypoint.add_subparsers(dest='command', required=True)
     parser = parsers.add_parser('file')
     parser.add_argument('path', type=FileType(mode='r'), default='-')
-    parser.add_argument("-o", "--output", required=False, help="Path to output file")
+    parser.add_argument("-o", "--output", required=True, help="Path to output file")
     parser.add_argument("--html", action="store_true", help="Generate HTML output with valuable info")
     parser = parsers.add_parser('blob')
     parser.add_argument('data')
     parser.add_argument('-g', '--guid', required=True)
     opts = entrypoint.parse_args()
     if opts.command == 'file':
-        creds = parse_xml(opts.path)
+        if opts.html:
+            creds = extract_valuables(opts.path)
+            generate_html(creds, opts.output)
+        else:
+            tree = etree.parse(opts.path)
+            root = tree.getroot()
+            guid = root.get('guid')
+            cipher = PaeCipherAES256(guid=guid)
+            decrypt_xml_node(root, cipher)
+            tree.write(opts.output, encoding="utf-8", xml_declaration=True, pretty_print=True)
 
-        if opts.output:
-            if opts.html:
-                generate_html(creds, opts.output)
-            else:
     elif opts.command == 'blob':
         content = opts.data
         cipher = PaeCipherAES256(guid=opts.guid)
         print(re.sub(r'([A-Z0-9]+={1,10})', lambda m: replacer(cipher, m), content))
     else:
         raise RuntimeError('unreachable')
-
-    
 
 
 def replacer(cipher: 'PaeCipherAES256', match: re.Match) -> str:
