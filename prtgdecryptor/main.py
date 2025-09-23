@@ -13,7 +13,7 @@ def main() -> None:
 
     parser = parsers.add_parser('file')
     parser.add_argument('path', type=FileType(mode='r'), default='-', help='Path to input file')
-    parser.add_argument('-o', '--output', type=FileType(mode='w'), default='-', help='Path to output file')
+    parser.add_argument('-o', '--output', type=FileType(mode='wb'), default='-', help='Path to output file')
     parser.add_argument('--html', action=BooleanOptionalAction, help='Generate HTML output, defaults to raw XML')
 
     parser = parsers.add_parser('blob')
@@ -107,7 +107,7 @@ def generate_html(results: list[tuple[str, dict[str, str]]], output_file: TextIO
 
     html.append('</body></html>')
 
-    output_file.write('\n'.join(html))
+    output_file.write('\n'.join(html).encode('utf-8'))
 
 
 def decrypt_xml_node(node: etree.Element, cipher: 'PaeCipher') -> None:
