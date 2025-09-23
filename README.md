@@ -8,16 +8,21 @@ uv tool install git+https://github.com/dadevel/prtg-decryptor.git@main
 
 Exfiltrate the file `C:\ProgramData\Paessler\PRTG Network Monitor\PRTG Configuration.dat` from PRTG.
 
-Then decrypt the secrets offline.
+Then decrypt the secrets offline and generate a pretty HTML.
 
 ~~~ bash
-# Decrypt whole file
-prtg-decryptor file ./configuration.dat -o out.xml
+prtg-decryptor file ./configuration.dat -o ./out.html --html
+~~~
 
-# Decrypt valuable information and generate a html file
-prtg-decryptor file ./configuration.dat -o out.html --html
+Or use the raw XML output.
 
-# Decrypt a blob
+~~~ bash
+prtg-decryptor file ./configuration.dat -o ./out.xml
+~~~
+
+Alternatively decrypt a single blob.
+
+~~~ bash
 prtg-decryptor blob -g '{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}' AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHH
 ~~~
 
