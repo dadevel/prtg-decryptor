@@ -290,7 +290,7 @@ def extract_valuables(xml_file: TextIO) -> list[tuple[str, dict[str, str]]]:
                     valuables[tag] = value
 
         # if we found multiple valuables under the same parent: they belong together
-        must_contain = ["pass","key","secret","cred"]
+        must_contain = ['pass','key','secret','cred']
         found = 0
         for key in valuables:
             lower_key = key.lower()
