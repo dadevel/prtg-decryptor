@@ -91,6 +91,74 @@ def decrypt_xml_node(node, cipher):
         decrypt_xml_node(child, cipher)
 
 def extract_valuables(xml_file):
+    blacklist = ["cloudcredentials",
+        "commentgroup",
+        "dbcredentials",
+        "lastlogin",
+        "linuxloginmode",
+        "mqttcredentials",
+        "mqtt_user_credentials",
+        "mqtt_use_user_credentials",
+        "ms365credentialchanged",
+        "ms365credentialsinherited",
+        "ms365secretkeychanged",
+        "opcua_use_user_credentials",
+        "paessler-ciscomeraki-credentials_section",
+        "paessler-ciscomeraki-credentials_section-credentials_group-api_endpoint",
+        "paessler-dellemc-dellemc_credentials_section",
+        "paessler-dellemc-dellemc_credentials_section-port_group-port",
+        "paessler-fortigate-fortigate_credentials_section",
+        "paessler-fortigate-fortigate_credentials_section-port_group-port",
+        "paessler-hpe3par-hpe3par_credentials_section",
+        "paessler-hpe3par-hpe3par_credentials_section-connection_group-port",
+        "paessler-hpe3par-hpe3par_credentials_section-connection_group-protocol",
+        "paessler-hpe3par-hpe3par_credentials_section-connection_group-ssh_port",
+        "paessler-http-credentials_section",
+        "paessler-http-credentials_section-credentials_group-authentication_method",
+        "paessler-microsoftazure-azure_credentials_section",
+        "paessler-microsoftazure-azure_credentials_section-credentials_group-management_endpoint",
+        "paessler-mqtt-credentials",
+        "paessler-mqtt-credentials-connection_mqtt-port",
+        "paessler-mqtt-credentials-tls-active",
+        "paessler-mqtt-credentials-tls-client_auth_active",
+        "paessler-mqtt-credentials-tls-server_auth_active",
+        "paessler-mqtt-credentials-user_credentials-active",
+        "paessler-nats-credentials_section",
+        "paessler-nats-credentials_section-credentials_group-authentication_method",
+        "paessler-nats-credentials_section-credentials_group-tls_handshake_first",
+        "paessler-nats-credentials_section-credentials_group-use_tls",
+        "paessler-nats-credentials_section-port_group-port",
+        "paessler-netapp-credentials_section",
+        "paessler-netapp-credentials_section-connection_group-connection_security",
+        "paessler-netapp-credentials_section-connection_group-port",
+        "paessler-opcua-credentials",
+        "paessler-opcua-credentials-connection_opcua-port",
+        "paessler-opcua-credentials-connection_security-security_mode",
+        "paessler-opcua-credentials-connection_security-security_policy",
+        "paessler-opcua-credentials-user_authentication-user_auth_mode",
+        "paessler-orchestra-credentials_orchestra_section",
+        "paessler-orchestra-credentials_orchestra_section-credentials_orchestra_group-authentication",
+        "paessler-orchestra-credentials_orchestra_section-port_orchestra_group-port",
+        "paessler-orchestra-credentials_orchestra_section-protocol_orchestra_group-protocol",
+        "paessler-orchestra-credentials_orchestra_section-timeout_orchestra_group-timeout",
+        "paessler-prtgdatahub-credentials_section",
+        "paessler-prtgdatahub-credentials_section-credentials_group-metrics_port",
+        "paessler-redfish-redfish_credentials_section",
+        "paessler-redfish-redfish_credentials_section-connection_group-port",
+        "paessler-redfish-redfish_credentials_section-connection_group-protocol",
+        "paessler-rest-authentication_section-authentication_group-login_auth_method",
+        "paessler-rest-authentication_section-authentication_group-login_request_method",
+        "paessler-rest-authentication_section-authentication_group-login_result_type",
+        "podlogintype",
+        "ssoenablelogin",
+        "ssoprovidername",
+        "trafficportname",
+        "updateportname",
+        "useproxycredentials",
+        "usersettings",
+        "usertype"
+    ]
+
     tree = etree.parse(xml_file)
     root = tree.getroot()
     guid = root.get('guid')
@@ -162,14 +230,7 @@ def extract_valuables(xml_file):
 
         # collect valuables from this node's children
         valuables = {}
-        valuables_list = ["user", "pass", "login", "comment", "name"]
-        blacklist = ["usersettings","paessler-mqtt-credentials-user_credentials-active",
-                     "paessler-opcua-credentials-user_authentication-user_auth_mode",
-                     "mqtt_user_credentials", "linuxloginmode",
-                     "trafficportname", "paessler-rest-authentication_section-authentication_group-login_auth_method",
-                     "paessler-rest-authentication_section-authentication_group-login_request_method",
-                     "paessler-rest-authentication_section-authentication_group-login_result_type",
-                     "updateportname", "usertype", "podlogintype", "lastlogin"]
+        valuables_list = ["user", "pass", "login", "comment", "name", "key", "secret", "cred"]
 
         for child in node:
             tag = child.tag.lower()
@@ -185,7 +246,14 @@ def extract_valuables(xml_file):
                     valuables[tag] = value
 
         # if we found multiple valuables under the same parent: they belong together
-        if valuables and any("pass" in key.lower() for key in valuables):
+        must_contain = ["pass","key","secret","cred"]
+        found = 0
+        for key in valuables:
+            lower_key = key.lower()
+            for keyword in must_contain:
+                if keyword in lower_key:
+                    found = 1
+        if found:
             entry = ("/".join(path), valuables)
             hashable_entry = ("/".join(path), frozenset(valuables.items()))
             if hashable_entry not in seen:
