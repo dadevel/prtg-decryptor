@@ -2,6 +2,7 @@ from argparse import ArgumentParser, BooleanOptionalAction, FileType
 from collections import defaultdict
 from html import escape
 from typing import TextIO
+from xml.etree import ElementTree
 import re
 
 import lxml.etree as etree
@@ -12,33 +13,33 @@ def main() -> None:
     parsers = entrypoint.add_subparsers(dest='command', required=True)
 
     parser = parsers.add_parser('file')
-    parser.add_argument('path', type=FileType(mode='r'), default='-', help='Path to input file')
-    parser.add_argument('-o', '--output', type=FileType(mode='wb'), default='-', help='Path to output file')
-    parser.add_argument('--html', action=BooleanOptionalAction, help='Generate HTML output, defaults to raw XML')
+    parser.add_argument('xml', type=FileType(mode='r'), default='-', help='Path to input file')
+    parser.add_argument('-o', '--output', type=FileType(mode='w'), default='-', help='Path to output file')
+    parser.add_argument('--raw', action=BooleanOptionalAction, help='Generate raw XML output, defaults to pretty HTML')
 
     parser = parsers.add_parser('blob')
     parser.add_argument('data')
     parser.add_argument('-g', '--guid', required=True)
 
     opts = entrypoint.parse_args()
-    if opts.command == 'file':
-        if opts.html:
-            creds = extract_valuables(opts.path)
-            generate_html(creds, opts.output)
-        else:
-            tree = etree.parse(opts.path)
-            root = tree.getroot()
-            guid = root.get('guid')
-            cipher = PaeCipherAES256(guid=guid)
-            decrypt_xml_node(root, cipher)
-            tree.write(opts.output, encoding="utf-8", xml_declaration=True, pretty_print=True)
 
+    if opts.command == 'file' and not opts.raw:
+        creds = extract_valuables(opts.xml)
+        generate_html(creds, opts.output)
+        return
+
+    if opts.command == 'file':
+        content = opts.xml.read()
+        root = ElementTree.fromstring(content)
+        guid = root.get('guid')
+        assert guid
     elif opts.command == 'blob':
         content = opts.data
-        cipher = PaeCipherAES256(guid=opts.guid)
-        print(re.sub(r'([A-Z0-9]+={1,10})', lambda m: replacer(cipher, m), content))
+        guid = opts.guid
     else:
         raise RuntimeError('unreachable')
+    cipher = PaeCipherAES256(guid=guid)
+    print(re.sub(r'([A-Z0-9]+={1,10})', lambda m: replacer(cipher, m), content), end='')
 
 
 def replacer(cipher: 'PaeCipherAES256', match: re.Match) -> str:
@@ -51,7 +52,6 @@ def replacer(cipher: 'PaeCipherAES256', match: re.Match) -> str:
         return f'DECRYPTED:{plaintext or ''}'
     except Exception as e:
         return f'FAILED:{e.__class__.__name__}'
-
 
 # html output
 
