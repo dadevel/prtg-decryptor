@@ -11,13 +11,13 @@ Exfiltrate the file `C:\ProgramData\Paessler\PRTG Network Monitor\PRTG Configura
 Then decrypt the secrets offline and generate a pretty HTML.
 
 ~~~ bash
-prtg-decryptor file ./configuration.dat -o ./out.html --html
+prtg-decryptor file ./configuration.dat -o ./out.html
 ~~~
 
 Or use the raw XML output.
 
 ~~~ bash
-prtg-decryptor file ./configuration.dat -o ./out.xml
+prtg-decryptor file ./configuration.dat -o ./out.xml --raw
 ~~~
 
 Alternatively decrypt a single blob.

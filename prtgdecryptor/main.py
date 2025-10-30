@@ -42,6 +42,7 @@ def main() -> None:
     result = re.sub(r'([A-Z0-9]+={1,10})', lambda m: replacer(cipher, m), content)
     opts.output.write(result)
 
+
 def replacer(cipher: 'PaeCipherAES256', match: re.Match) -> str:
     ciphertext = match.group(1)
     try:
