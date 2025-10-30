@@ -137,7 +137,8 @@ def decrypt_xml_node(node: etree.Element, cipher: 'PaeCipher') -> None:
 
 
 def extract_valuables(xml_file: TextIO) -> list[tuple[str, dict[str, str]]]:
-    blacklist = ["cloudcredentials",
+    blacklist = [
+        "cloudcredentials",
         "commentgroup",
         "dbcredentials",
         "lastlogin",
@@ -207,7 +208,17 @@ def extract_valuables(xml_file: TextIO) -> list[tuple[str, dict[str, str]]]:
         "paessler-rest-authentication_section-authentication_group-auth_header_name",
         "paessler-rest-authentication_section-authentication_group-login_cookie_name",
         "paessler-rest-authentication_section-authentication_group-login_header_name",
-        "paessler-rest-authentication_section-authentication_group-login_json_path"
+        "paessler-rest-authentication_section-authentication_group-login_json_path",
+        "paessler-microsoftazure-azure_credentials_section-credentials_group-client_id",
+        "paessler-microsoftazure-azure_credentials_section-credentials_group-subscription_id",
+        "paessler-rest-authentication_section-custom_secrets_group-placeholder1_description",
+        "paessler-rest-authentication_section-custom_secrets_group-placeholder1",
+        "paessler-rest-authentication_section-custom_secrets_group-placeholder1_description",
+        "paessler-rest-authentication_section-custom_secrets_group-placeholder2_description",
+        "paessler-rest-authentication_section-custom_secrets_group-placeholder1_description",
+        "paessler-rest-authentication_section-custom_secrets_group-placeholder1",
+        "microsoft365clientsecret",
+        "apikeyid",
     ]
 
     tree = etree.parse(xml_file)
@@ -279,7 +290,7 @@ def extract_valuables(xml_file: TextIO) -> list[tuple[str, dict[str, str]]]:
 
         # collect valuables from this node's children
         valuables: dict[str, str] = {}
-        valuables_list = ['user', 'pass', 'login', 'comment', 'name']
+        valuables_list = ['user', 'pass', 'login', 'comment', 'name', 'key', 'secret', 'cred']
 
         for child in node:
             tag = child.tag.lower()
