@@ -39,8 +39,8 @@ def main() -> None:
     else:
         raise RuntimeError('unreachable')
     cipher = PaeCipherAES256(guid=guid)
-    print(re.sub(r'([A-Z0-9]+={1,10})', lambda m: replacer(cipher, m), content), end='')
-
+    result = re.sub(r'([A-Z0-9]+={1,10})', lambda m: replacer(cipher, m), content)
+    opts.output.write(result)
 
 def replacer(cipher: 'PaeCipherAES256', match: re.Match) -> str:
     ciphertext = match.group(1)
@@ -107,7 +107,7 @@ def generate_html(results: list[tuple[str, dict[str, str]]], output_file: TextIO
 
     html.append('</body></html>')
 
-    output_file.write('\n'.join(html).encode('utf-8'))
+    output_file.write('\n'.join(html))
 
 
 def decrypt_xml_node(node: etree.Element, cipher: 'PaeCipher') -> None:
