@@ -202,7 +202,12 @@ def extract_valuables(xml_file: TextIO) -> list[tuple[str, dict[str, str]]]:
         "updateportname",
         "useproxycredentials",
         "usersettings",
-        "usertype"
+        "usertype",
+        "paessler-rest-authentication_section-authentication_group-auth_cookie_name",
+        "paessler-rest-authentication_section-authentication_group-auth_header_name",
+        "paessler-rest-authentication_section-authentication_group-login_cookie_name",
+        "paessler-rest-authentication_section-authentication_group-login_header_name",
+        "paessler-rest-authentication_section-authentication_group-login_json_path"
     ]
 
     tree = etree.parse(xml_file)
