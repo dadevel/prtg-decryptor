@@ -218,7 +218,6 @@ def extract_valuables(xml_file: TextIO) -> list[tuple[str, dict[str, str]]]:
         'paessler-rest-authentication_section-custom_secrets_group-placeholder2_description',
         'paessler-rest-authentication_section-custom_secrets_group-placeholder1_description',
         'paessler-rest-authentication_section-custom_secrets_group-placeholder1',
-        'microsoft365clientsecret',
         'apikeyid',
     ]
 
